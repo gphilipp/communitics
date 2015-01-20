@@ -12,12 +12,15 @@
                  [compojure "1.2.0"]
                  [enlive "1.1.5"]
                  [om "0.7.3"]
+                 [om-sync "0.1.1"]
                  [figwheel "0.1.4-SNAPSHOT"]
                  [environ "1.0.0"]
                  [com.cemerick/piggieback "0.1.3"]
                  [weasel "0.4.0-SNAPSHOT"]
                  [leiningen "2.5.0"]
                  [com.datomic/datomic-pro "0.9.5130" :exclusions [joda-time]]]
+
+  :jvm-opts ^:replace ["-Xmx512m" "-server"]
 
   :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
                                    :creds :gpg}}

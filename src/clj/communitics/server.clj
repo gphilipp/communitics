@@ -14,13 +14,19 @@
              (io/resource "index.html") [] [:body] (if is-dev? inject-devmode-html identity))
 
 
-;(def uri "datomic:dev://localhost:4334/communitics")
-;(d/create-database uri)
-;(def conn (d/connect uri))
+(def uri "datomic:dev://localhost:4334/mbrainz-1968-1973")
+(d/create-database uri)
+(def conn (d/connect uri))
 
-(defn sum [request]
+(defn find-countries []
+  (d/q '[:find ?name
+         :where [?e :db/ident ?name]]
+       (d/db conn)))
+
+
+(defn sum [req]
   {:status  200
-   :body    (str (+ 1 2))
+   :body (pr-str [:a :b :c])
    :headers {"Content-Type" "application/edn"}})
 
 (defroutes routes
