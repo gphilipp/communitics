@@ -26,7 +26,7 @@
 
 (defn sum [req]
   {:status  200
-   :body (pr-str [:a :b :c])
+   :body (pr-str (find-countries))
    :headers {"Content-Type" "application/edn"}})
 
 (defroutes routes

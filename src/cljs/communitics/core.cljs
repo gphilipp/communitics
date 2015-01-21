@@ -34,11 +34,14 @@
                             (dom/button
                               #js {:onClick (fn [_]
                                               (get-sum (fn [res]
-                                                         (println res)
-                                                         (om/transact! app :sum (fn [_] (reader/read-string res))))))}
-                              "Find all countries")
-                            (dom/textarea #js {:value (:sum app)}))
-                   (dom/div nil (dom/label nil (or "Countries:" (:sum app)))))
+                                                         (om/transact! app :sum (fn [_] res))
+                                                         (println "(:sum app)=" (:sum @app)))))}
+                              "See countries")
+                            (dom/textarea #js {:value (pr-str (:sum app))}))
+                   (dom/div nil
+                            (dom/h1 nil "Countries")
+                            (apply dom/ul nil
+                                    (map #(dom/li nil (pr-str %)) (:sum app)))))
           )))
     app-state
     {:target (. js/document (getElementById "app"))}))
