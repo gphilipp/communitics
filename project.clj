@@ -5,11 +5,13 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :source-paths ["src/clj" "src/cljs"]
+  :test-paths ["test/clj"]
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2371" :scope "provided"]
                  [ring "1.3.1"]
                  [compojure "1.2.0"]
+                 [com.stuartsierra/component "0.2.2"]
                  [enlive "1.1.5"]
                  [om "0.7.3"]
                  [om-sync "0.1.1"]
@@ -33,6 +35,7 @@
   :uberjar-name "communitics.jar"
 
   :cljsbuild {:builds {:app {:source-paths ["src/cljs"]
+                             :test-paths ["test/cljs"]
                              :compiler {:output-to     "resources/public/js/app.js"
                                         :output-dir    "resources/public/js/out"
                                         :source-map    "resources/public/js/out.js.map"
