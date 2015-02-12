@@ -9,6 +9,7 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2371" :scope "provided"]
+                 [com.stuartsierra/component "0.2.2"]
                  [ring "1.3.1"]
                  [compojure "1.2.0"]
                  [com.stuartsierra/component "0.2.2"]
@@ -20,6 +21,7 @@
                  [com.cemerick/piggieback "0.1.3"]
                  [weasel "0.4.0-SNAPSHOT"]
                  [leiningen "2.5.0"]
+                 [clj-http "1.0.1"]
                  [com.datomic/datomic-pro "0.9.5130" :exclusions [joda-time]]]
 
   :jvm-opts ^:replace ["-Xmx512m" "-server"]

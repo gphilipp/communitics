@@ -9,9 +9,6 @@
   (System/setProperty "http.proxyPort", "8080")
   (System/setProperty "http.nonProxyHosts", "*.socgen"))
 
-(deftest proxy
-  (is (= 2 2)))
-
 (testing "hey"
   (is (= "hey" "hey")))
 
