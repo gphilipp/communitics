@@ -52,21 +52,6 @@
          :where [?e :db/ident ?name]]
        (d/db (:connection database))))
 
-(defn sum [req]
-  {:status 200
-   :body (pr-str (find-countries (:database system)))
-   :headers {"Content-Type" "application/edn"}})
-
-(defroutes routes
-           (resources "/")
-           (resources "/react" {:root "react"})
-           (GET "/sum" req sum)
-           (GET "/*" req (page)))
-
-(def http-handler
-  (if is-dev?
-    (reload/wrap-reload (api #'routes))
-    (api routes)))
 
 (defrecord WebServer [port]
   component/Lifecycle
@@ -89,7 +74,7 @@
   (let [gc (GithubCrawler. nil nil)]
     (assoc gc :serveraddress (:github-address config-options))))
 
-(defn new-system [config-options]
+(defn prod-system [config-options]
   (let [{:keys [datomic-url]} config-options]
     (component/system-map
       :database (new-database datomic-url)
@@ -97,12 +82,8 @@
              (new-github-crawler config-options)
              [:database]))))
 
-(def system (new-system {:github-address "http://github.com/api/v3"
+(def system (prod-system {:github-address "http://github.com/api/v3"
                          :datomic-url "datomic:dev://localhost:4334/mbrainz-1968-1973"}))
-
-
-
-
 
 (defn run [& [port]]
   (defonce ^:private server
@@ -113,6 +94,25 @@
                (run-jetty http-handler {:port port
                                         :join? false}))))
   server)
+
+(defn sum [req]
+  {:status 200
+   :body (pr-str (find-countries (:database system)))
+   :headers {"Content-Type" "application/edn"}})
+
+
+
+(def http-handler [database]
+  (if is-dev?
+    (reload/wrap-reload (api #'routes))
+    (api (routes
+           (resources "/")
+           (resources "/react" {:root "react"})
+           (GET "/sum" req sum database)
+           (GET "/*" req (page))))))
+
+
+
 
 (defn -main [& [port]]
   (run port))
