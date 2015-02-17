@@ -26,14 +26,16 @@
   (start [this]
     (println ";; Starting database")
     (let [conn (connect-to-database uri)]
-      (assoc this :connection conn)))
+      (assoc this :connection conn)
+      (println "connected to " conn)))
 
   (stop [this]
     (println ";; Stopping database")
     ;; In the 'stop' method, shut down the running
     ;; component and release any external resources it has
     ;; acquired.
-    (d/release connection)
+    (when connection
+      (d/release connection))
     ;; Return the component, optionally modified. Remember that if you
     ;; dissoc one of a record's base fields, you get a plain map.
     (assoc this :connection nil)))
@@ -73,43 +75,34 @@
 
 (defrecord WebServer [github-crawler database port]
   component/Lifecycle
-  (start [this]
+  (start [component]
     (do
       (if is-dev? (start-figwheel))
       (let [port (Integer. (or port (env :port) 10555))]
         (print "Starting web server on port" port ".\n")
-        (assoc this :jetty (run-jetty (make-handler database) {:port port :join? false})))))
-  (stop [this]
-    (.stop (:jetty this))))
+        (assoc component :jetty (run-jetty (make-handler database) {:port port :join? false})))))
+  (stop [component]
+    (.stop (:jetty component))))
 
-(defn new-database [uri]
+
+(defn make-database [uri]
   (Database. uri nil))
 
-(defn new-github-crawler [config-options]
-  (let [gc (GithubCrawler. nil nil)]
-    (assoc gc :serveraddress (:github-address config-options))))
+
+(defn make-github-crawler [config-options]
+  (component/using
+    (let [gc (GithubCrawler. nil nil)]
+      (assoc gc :serveraddress (:github-address config-options)))
+    [:database]))
+
 
 (defn prod-system [config-options]
-  (let [{:keys [datomic-url]} config-options]
+  (let [{:keys [datomic-uri]} config-options]
     (component/system-map
-      :database (new-database datomic-url)
-      :app (component/using
-             (new-github-crawler config-options)
-             [:database]))))
-
-(def system (prod-system {:github-address "http://github.com/api/v3"
-                          :datomic-url "datomic:dev://localhost:4334/mbrainz-1968-1973"}))
-
-#_(defn run [& [port]]
-  (defonce ^:private server
-           (do
-             (if is-dev? (start-figwheel))
-             (let [port (Integer. (or port (env :port) 10555))]
-               (print "Starting web server on port" port ".\n")
-               (run-jetty make-handler {:port port
-                                        :join? false}))))
-  server)
+      :database (make-database datomic-uri)
+      :github-crawler (make-github-crawler config-options))))
 
 
 (defn -main [& [port]]
-  (component/start system))
+  (component/start (prod-system {:github-address "http://github.com/api/v3"
+                                 :datomic-uri "datomic:dev://localhost:4334/mbrainz-1968-1973"})))

@@ -12,3 +12,5 @@ pom.xml.asc
 /.repl
 /.idea
 *.iml
+src/clj/communitics/sg.clj
+
