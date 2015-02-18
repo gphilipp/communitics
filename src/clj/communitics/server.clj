@@ -64,6 +64,7 @@
   (fn [req]
     (f (assoc req ::database database))))
 
+
 (defn make-handler [database]
   (-> (routes
         (resources "/")
@@ -73,36 +74,39 @@
       (wrap-app-component database)
       api))
 
+
 (defrecord WebServer [github-crawler database port]
   component/Lifecycle
   (start [component]
     (do
       (if is-dev? (start-figwheel))
       (let [port (Integer. (or port (env :port) 10555))]
-        (print "Starting web server on port" port ".\n")
-        (assoc component :jetty (run-jetty (make-handler database) {:port port :join? false})))))
+        (println "Starting web server on port" port ".\n")
+        (println "database:" database)
+        (assoc component
+          :jetty (run-jetty (make-handler database) {:port port :join? false})))))
   (stop [component]
     (.stop (:jetty component))))
 
 
 (defn make-database [uri]
-  (Database. uri nil))
+  (map->Database {:uri uri}))
 
 
 (defn make-github-crawler [config-options]
   (component/using
-    (let [gc (GithubCrawler. nil nil)]
-      (assoc gc :serveraddress (:github-address config-options)))
+    (map->GithubCrawler {:serveraddress (:github-address config-options)})
     [:database]))
 
 
 (defn prod-system [config-options]
-  (let [{:keys [datomic-uri]} config-options]
-    (component/system-map
-      :database (make-database datomic-uri)
-      :github-crawler (make-github-crawler config-options))))
+  (component/system-map
+    :database (make-database (:datomic-uri config-options))
+    :github-crawler (make-github-crawler config-options)))
 
 
 (defn -main [& [port]]
-  (component/start (prod-system {:github-address "http://github.com/api/v3"
-                                 :datomic-uri "datomic:dev://localhost:4334/mbrainz-1968-1973"})))
+  (component/start
+    (prod-system
+      {:github-address "http://github.com/api/v3"
+       :datomic-uri "datomic:dev://localhost:4334/mbrainz-1968-1973"})))
