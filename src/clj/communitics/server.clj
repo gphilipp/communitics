@@ -27,7 +27,8 @@
     (println ";; Starting database")
     (let [conn (connect-to-database uri)]
       (assoc this :connection conn)
-      (println "connected to " conn)))
+      ;(println "connected to " conn)
+      ))
 
   (stop [this]
     (println ";; Stopping database")
@@ -49,10 +50,12 @@
     (println ";; Stopping github crawler"))
   )
 
+
 (defn find-countries [database]
   (d/q '[:find ?name
          :where [?e :db/ident ?name]]
        (d/db (:connection database))))
+
 
 (defn sum [req]
   {:status 200
@@ -75,7 +78,7 @@
       api))
 
 
-(defrecord WebServer [github-crawler database port]
+(defrecord WebApp [jetty database port]
   component/Lifecycle
   (start [component]
     (do
@@ -102,7 +105,11 @@
 (defn prod-system [config-options]
   (component/system-map
     :database (make-database (:datomic-uri config-options))
-    :github-crawler (make-github-crawler config-options)))
+    :github-crawler (component/using
+                      (map->GithubCrawler {:serveraddress (:github-address config-options)})
+                      [:database])
+    :web-app (component/using
+               (map->WebApp {:port 10555}) [:database])))
 
 
 (defn -main [& [port]]
