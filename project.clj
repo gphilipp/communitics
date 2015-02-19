@@ -8,18 +8,17 @@
   :test-paths ["test/clj"]
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2371" :scope "provided"]
-                 [ring "1.3.1"]
-                 [compojure "1.2.0"]
+                 [org.clojure/clojurescript "0.0-2850" :scope "provided"]
+                 [figwheel "0.2.5-SNAPSHOT"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [com.stuartsierra/component "0.2.2"]
-                 [enlive "1.1.5"]
-                 [om "0.7.3"]
+                 [ring "1.3.1"]
+                 [ring-cors "0.1.6"]
+                 [compojure "1.2.0"]
+                 [org.omcljs/om "0.8.8"]
                  [om-sync "0.1.1"]
-                 [figwheel "0.1.4-SNAPSHOT"]
-                 [environ "1.0.0"]
-                 [com.cemerick/piggieback "0.1.3"]
-                 [weasel "0.4.0-SNAPSHOT"]
-                 [leiningen "2.5.0"]
+                 [com.cemerick/piggieback "0.1.5"]
+                 [weasel "0.6.0-SNAPSHOT"]
                  [clj-http "1.0.1"]
                  [com.datomic/datomic-pro "0.9.5130" :exclusions [joda-time]]]
 
@@ -28,42 +27,59 @@
   :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
                                    :creds :gpg}}
 
-  :plugins [[lein-cljsbuild "1.0.3"]
-            [lein-environ "1.0.0"]]
+  :plugins [[lein-cljsbuild "1.0.4-SNAPSHOT"]
+            [lein-figwheel "0.2.5-SNAPSHOT"]]
 
-  :min-lein-version "2.5.0"
+  :repl-options {:init-ns communitics.server
+                 :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
-  :uberjar-name "communitics.jar"
+  :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
-  :cljsbuild {:builds {:app {:source-paths ["src/cljs"]
-                             :test-paths ["test/cljs"]
-                             :compiler {:output-to     "resources/public/js/app.js"
-                                        :output-dir    "resources/public/js/out"
-                                        :source-map    "resources/public/js/out.js.map"
-                                        :preamble      ["react/react.min.js"]
-                                        :externs       ["react/externs/react.js"]
-                                        :optimizations :none
-                                        :pretty-print  true}}}}
+  :cljsbuild {
+              :builds [{:id "dev"
+                        :source-paths ["src/cljs" "dev_src"]
+                        :compiler {:output-to "resources/public/js/compiled/communitics.js"
+                                   :output-dir "resources/public/js/compiled/out"
+                                   :optimizations :none
+                                   :main communitics.dev
+                                   :asset-path "js/compiled/out"
+                                   :source-map true
+                                   :source-map-timestamp true
+                                   :cache-analysis true}}
+                       {:id "min"
+                        :source-paths ["src/cljs"]
+                        :compiler {:output-to "resources/public/js/compiled/communitics.js"
+                                   :main communitics.core
+                                   :optimizations :advanced
+                                   :pretty-print false}}]}
 
-  :profiles {:dev {:repl-options {:init-ns communitics.server
-                                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+  :figwheel {
+             :http-server-root "public"                     ;; default and assumes "resources"
+             :server-port 3449                              ;; default
+             :css-dirs ["resources/public/css"]             ;; watch and update CSS
 
-                   :plugins [[lein-figwheel "0.1.4-SNAPSHOT"]]
+             ;; Start an nREPL server into the running figwheel process
+             ;; :nrepl-port 7888
 
-                   :figwheel {:http-server-root "public"
-                              :port 3449
-                              :css-dirs ["resources/public/css"]}
+             ;; Server Ring Handler (optional)
+             ;; if you want to embed a ring handler into the figwheel http-kit
+             ;; server, this is simple ring servers, if this
+             ;; doesn't work for you just run your own server :)
+             ;; :ring-handler hello_world.server/handler
 
-                   :env {:is-dev true}
+             ;; To be able to open files in your editor from the heads up display
+             ;; you will need to put a script on your path.
+             ;; that script will have to take a file path and a line number
+             ;; ie. in  ~/bin/myfile-opener
+             ;; #! /bin/sh
+             ;; emacsclient -n +$2 $1
+             ;;
+             ;; :open-file-command "myfile-opener"
 
-                   :cljsbuild {:builds {:app {:source-paths ["env/dev/cljs"]}}}}
+             ;; if you want to disable the REPL
+             ;; :repl false
 
-             :uberjar {:hooks [leiningen.cljsbuild]
-                       :env {:production true}
-                       :omit-source true
-                       :aot :all
-                       :cljsbuild {:builds {:app
-                                            {:source-paths ["env/prod/cljs"]
-                                             :compiler
-                                             {:optimizations :advanced
-                                              :pretty-print false}}}}}})
+             ;; to configure a different figwheel logfile path
+             ;; :server-logfile "tmp/logs/figwheel-logfile.log"
+             }
+  )

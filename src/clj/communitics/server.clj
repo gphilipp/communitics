@@ -1,18 +1,14 @@
 (ns communitics.server
-  (:require [clojure.java.io :as io]
-            [communitics.dev :refer [is-dev? inject-devmode-html browser-repl start-figwheel]]
-            [compojure.core :refer [GET defroutes routes]]
+  (:require [compojure.core :refer [GET defroutes routes]]
             [compojure.route :refer [resources]]
             [compojure.handler :refer [api]]
-            [net.cgrand.enlive-html :refer [deftemplate]]
-            [ring.middleware.reload :as reload]
-            [environ.core :refer [env]]
             [ring.adapter.jetty :refer [run-jetty]]
             [datomic.api :as d]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [ring.middleware.cors :refer [wrap-cors]]))
 
-(deftemplate page
-             (io/resource "index.html") [] [:body] (if is-dev? inject-devmode-html identity))
+;(deftemplate page
+;             (io/resource "index.html") [] [:body] (if is-dev? inject-devmode-html identity))
 
 (def not-nil? (complement nil?))
 
@@ -44,9 +40,9 @@
 
 (defrecord GithubCrawler [serveraddress database]
   component/Lifecycle
-  (start [component]
+  (start [_]
     (println ";; Starting github crawler"))
-  (stop [component]
+  (stop [_]
     (println ";; Stopping github crawler"))
   )
 
@@ -72,9 +68,11 @@
   (-> (routes
         (resources "/")
         (resources "/react" {:root "react"})
-        (GET "/sum" [req] sum)
-        (GET "/*" [req] (page)))
+        (GET "/sum" [] sum)
+        (GET "/*" [] (resources "index.html")))
       (wrap-app-component database)
+      (wrap-cors :access-control-allow-origin [#"http://localhost:3449"]
+                 :access-control-allow-methods [:get :put :post :delete])
       api))
 
 
@@ -82,8 +80,7 @@
   component/Lifecycle
   (start [component]
     (do
-      (if is-dev? (start-figwheel))
-      (let [port (Integer. (or port (env :port) 10555))]
+      (let [port (Integer. (or port 10555))]
         (println "Starting web server on port" port ".\n")
         (println "database:" database)
         (assoc component
