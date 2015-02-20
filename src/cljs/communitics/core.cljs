@@ -11,13 +11,15 @@
 (enable-console-print!)
 
 (defonce app-state (atom {:title "Communitics"
-                          :sum   "no result"}))
+                          :users ["no result"]}))
 
-(defn get-sum [cb]
+(def serveraddress "http://localhost:10555")
+
+(defn call-server [cb command]
   (edn-xhr
     {:method :get
-     :url    "http://localhost:10555/sum"
-     :data   {}
+     :url (str serveraddress command)
+     :data {}
      :on-complete cb}))
 
 
@@ -34,15 +36,26 @@
             (dom/button
               #js {:onClick
                    (fn [_]
-                     (get-sum (fn [res]
-                                (om/transact! app :sum (fn [_] res))
-                                (println "(:sum app)=" (:sum @app)))))}
-              "See countries ftw")
-            (dom/textarea #js {:value (pr-str (:sum app))}))
+                     (call-server
+                       (fn [res]
+                         (om/transact! app :users (fn [_] res))
+                         (println "Found users:" (:users @app)))
+                       "/users"))}
+              "Get users from datomic")
+            (dom/button
+              #js {:onClick
+                   (fn [_]
+                     (call-server
+                       (fn [res]
+                         (om/transact! app :import-result (fn [_] res)))
+                       "/crawl"))}
+              "Crawl github")
+            (dom/label nil (str "imported " (pr-str (:import-count (:import-result app)))))
+            #_(dom/textarea #js {:value (pr-str (:users app))}))
           (dom/div nil
-                   (dom/h1 nil "Countries")
+                   (dom/h1 nil "Users")
                    (apply dom/ul nil
-                          (map #(dom/li nil (pr-str %)) (:sum app)))))
+                          (map #(dom/li nil (pr-str %)) (:users app)))))
         )))
   app-state
   {:target (. js/document (getElementById "app"))})

@@ -1,4 +1,4 @@
-(ns communitics.github
+(ns communitics.github-test
   (:require [clojure.test :refer [testing is deftest]]))
 
 

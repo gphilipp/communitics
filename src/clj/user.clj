@@ -5,11 +5,15 @@
 
 (def system nil)
 
+
+(def official-github "https://api.github.com")
+(def enterprise-github "https://sgithub.fr.world.socgen/api/v3")
+
 (defn init []
   (alter-var-root #'system
                   (constantly
-                    (app/prod-system {:github-address "http://github.com/api/v3"
-                                      :datomic-uri "datomic:dev://localhost:4334/mbrainz-1968-1973"}))))
+                    (app/prod-system {:github-address enterprise-github
+                                      :datomic-uri "datomic:dev://localhost:4334/communitics"}))))
 
 (defn start []
   (alter-var-root #'system component/start))

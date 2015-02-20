@@ -5,7 +5,8 @@
             [ring.adapter.jetty :refer [run-jetty]]
             [datomic.api :as d]
             [com.stuartsierra.component :as component]
-            [ring.middleware.cors :refer [wrap-cors]]))
+            [ring.middleware.cors :refer [wrap-cors]]
+            [communitics.github :as github]))
 
 (def not-nil? (complement nil?))
 
@@ -40,44 +41,51 @@
     component))
 
 
-(defn find-countries [database]
+(defn find-users [database]
   (d/q '[:find ?name
-         :where [?e :db/ident ?name]]
+         :where [_ :user/url ?name]]
        (d/db (:connection database))))
 
-
-(defn sum [req]
+(defn users [req]
   {:status 200
-   :body (pr-str (find-countries (::database req)))
+   :body (pr-str (find-users (::database req)))
    :headers {"Content-Type" "application/edn"}})
 
-(defn wrap-app-component [f database]
+(defn crawl [req]
+  {:status 200
+   :body (pr-str (github/import-data-into-db (::database req) (::github-crawler req)))
+   :headers {"Content-Type" "application/edn"}})
+
+
+(defn wrap-app-component [f database github-crawler]
   "Middleware that adds component awareness"
   (fn [req]
-    (f (assoc req ::database database))))
+    (f (assoc req ::database database ::github-crawler github-crawler))))
 
 
-(defn make-handler [database]
+(defn make-handler [database github-crawler]
   (-> (routes
         (resources "/")
-        (GET "/sum" [] sum)
+        (GET "/users" [] users)
+        (GET "/crawl" [] crawl)
         (GET "/*" [] (resources "index.html")))
-      (wrap-app-component database)
+      (wrap-app-component database github-crawler)
       (wrap-cors :access-control-allow-origin [#"http://localhost.*"]
                  :access-control-allow-methods [:get :put :post :delete])
       api))
 
 
-(defrecord WebApp [jetty database port]
+(defrecord WebApp [jetty database github-crawler port ]
   component/Lifecycle
   (start [component]
     (do
       (let [port (Integer. (or port 10555))]
         (println ";; Starting web server on port" port)
         (assoc component
-          :jetty (run-jetty (make-handler database) {:port port :join? false})))))
+          :jetty (run-jetty (make-handler database github-crawler) {:port port :join? false})))))
   (stop [component]
-    (.stop (:jetty component))))
+    (when-let [jetty (:jetty component)]
+      (.stop jetty))))
 
 
 (defn make-database [uri]
@@ -94,10 +102,10 @@
   (component/system-map
     :database (make-database (:datomic-uri config-options))
     :github-crawler (make-github-crawler config-options)
-    :web-app (component/using (map->WebApp {:port 10555}) [:database])))
+    :web-app (component/using (map->WebApp {:port 10555}) [:database :github-crawler])))
 
 (defn -main [& [port]]
   (component/start
     (prod-system
       {:github-address "http://github.com/api/v3"
-       :datomic-uri "datomic:dev://localhost:4334/mbrainz-1968-1973"})))
+       :datomic-uri "datomic:dev://localhost:4334/communitics"})))
