@@ -7,7 +7,7 @@
 
 ;(defn http-get [url] (client/get url ({:as :json})))
 (defn http-get [url]
-  (client/get url {:as :json :digest-auth ["username" "pwd"]}))
+  (client/get url {:as :json :digest-auth ["login" "pwd"]}))
 
 (defn init-schema [database]
   (d/transact (:connection database)

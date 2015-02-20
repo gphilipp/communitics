@@ -30,20 +30,21 @@
       (render [_]
         (dom/div
           nil
-          (dom/div
-            #js {:className "block"}
+          (dom/div nil
             (dom/h1 nil (:title app))
             (dom/button
-              #js {:onClick
+              #js {:className "pure-button pure-button-primary l-box"
+                   :onClick
                    (fn [_]
                      (call-server
                        (fn [res]
                          (om/transact! app :users (fn [_] res))
                          (println "Found users:" (:users @app)))
                        "/users"))}
-              "Get users from datomic")
+              "List users")
             (dom/button
-              #js {:onClick
+              #js {:className "pure-button pure-button-primary l-box"
+                   :onClick
                    (fn [_]
                      (call-server
                        (fn [res]
@@ -53,7 +54,8 @@
             (dom/label nil (str "imported " (pr-str (:import-count (:import-result app)))))
             #_(dom/textarea #js {:value (pr-str (:users app))}))
           (dom/div nil
-                   (dom/h1 nil "Users")
+                   (dom/h1 nil "Github")
+                   (dom/h3 nil (count (:users app)) " users")
                    (apply dom/ul nil
                           (map #(dom/li nil (pr-str %)) (:users app)))))
         )))

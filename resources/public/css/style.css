@@ -1,9 +1,19 @@
 h1 {
-  text-decoration: none;
-  color: blueviolet;
+    /*text-align: left;*/
+    color: dimgray;
+    padding-left: 10px;
+}
+
+h3 {
+    color: black;
+    padding-left: 15px;
+}
+
+.l-box {
+    padding: 1em;
+    
 }
 
 .block {
  display: inline-block;
-
 }
