@@ -1,15 +1,109 @@
 {:github {:schema [{:db/id #db/id[:db.part/db]
-                  :db/ident :user/name
-                  :db/valueType :db.type/string
-                  :db/cardinality :db.cardinality/one
-                  :db/doc "A user or organization name"
-                  :db.install/_attribute :db.part/db}
+                    :db/ident :user/name
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "A user or organization name"
+                    :db.install/_attribute :db.part/db}
                    {:db/id #db/id[:db.part/db]
-                  :db/ident :user/url
-                  :db/valueType :db.type/string
-                  :db/cardinality :db.cardinality/one
-                  :db/doc "The url of the user or organization"
-                  :db.install/_attribute :db.part/db}]
-          }
-
- }
+                    :db/ident :user/url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The url of the user or organization"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/gravatar_id
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The gravatar id"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/followers_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The followers url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/repos_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The repos url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/type
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The user type (User or Orga)"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/id
+                    :db/valueType :db.type/long
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The user id"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/avatar_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The avatar url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/organizations_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The organizations url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/events_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The events url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/following_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The following url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/starred_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The starred url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/login
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The user login"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/html_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The html url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/gists_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The gists url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/site_admin
+                    :db/valueType :db.type/boolean
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "Is the user site admin ? (true or false)"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/received_events_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The received events url"
+                    :db.install/_attribute :db.part/db}
+                   {:db/id #db/id[:db.part/db]
+                    :db/ident :user/subscriptions_url
+                    :db/valueType :db.type/string
+                    :db/cardinality :db.cardinality/one
+                    :db/doc "The subscriptions url"
+                    :db.install/_attribute :db.part/db}
+                   ]}}

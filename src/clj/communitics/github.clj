@@ -2,23 +2,20 @@
   (:require [datomic.api :as d]
             [communitics.datomic-util :as dutil]
             [clj-http.client :as client]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.set :as set]))
 
 
 ;(defn http-get [url] (client/get url ({:as :json})))
 (defn http-get [url]
   (client/get url {:as :json :digest-auth ["login" "pwd"]}))
 
-(defn init-schema [database]
-  (d/transact (:connection database)
-              (-> (dutil/read-all (io/resource "schema/schema.edn"))
-                  (first)
-                  (get-in [:github :schema]))))
 
-(defn find-user [database]
-  (d/q '[:find ?name
-         :where [_ :user/url ?name]]
-       (d/db (:connection database))))
+(defn list-users [database]
+  (flatten (d/q '[:find (pull ?e [*])
+                  :where
+                  [?e :user/login]]
+                (d/db (:connection database)))))
 
 (defn map-vals
   "Given a map and a function, returns the map resulting from applying
@@ -27,12 +24,12 @@
   (zipmap (keys m) (map f (vals m))))
 
 
-(defn fetch-github-data!
-  [github-crawler resource-name]
+(defn fetch-github-data! [github-crawler resource-name]
   "Fetches data from a multi-page github resource like
    users or repositories"
-  (loop [url    (str (:serveraddress github-crawler) "/" resource-name)
-         result []]
+  (loop [url           (str (:serveraddress github-crawler) "/" resource-name)
+         result        []
+         requests-left (or (:max-request-count github-crawler) Integer/MAX_VALUE)]
     (println "Fetching" url)
     (let [response (http-get url)
           next-url (get-in response [:links :next :href])
@@ -40,23 +37,33 @@
           result   (if (map? data)
                      (conj result data)
                      (into result data))]
-      (if next-url
-        (recur next-url result)
-        result)))
-  )
+      (if (and next-url (pos? requests-left))
+        (recur next-url result (dec requests-left))
+        result))))
 
 
-(defn create-users-import-tx [users]
-  (map (fn [user]
-         {:db/id (d/tempid :db.part/user) :user/url user})
-       (map :html_url (filter #(= "User" (:type %)) users))))
+(defn prefix-keys [m prefix]
+  (let [keys     (keys m)
+        prefixed (map #(->> % name (str "user/") keyword) keys)]
+    (zipmap keys prefixed)))
+
+
+(defn github->datomic [github-data]
+  (map #(set/rename-keys % (-> github-data (first) (prefix-keys "users/")))
+       github-data))
+
+
+(defn create-txes [github-data]
+  (map #(assoc % :db/id (d/tempid :db.part/user))
+       (github->datomic github-data)))
 
 
 (defn import-data-into-db [database github-crawler]
   (let [users (fetch-github-data! github-crawler "users")
-        txes  (create-users-import-tx users)]
-    (println "Importing github data into datomic ")
-    (d/transact (:connection database) txes)
+        txes  (create-txes users)
+        _     (println "Importing github data into datomic ")
+        result @(d/transact (:connection database) txes)]
+    (println result)
     {:import-count (count txes)}))
 
 

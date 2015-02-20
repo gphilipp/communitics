@@ -6,23 +6,25 @@
             [datomic.api :as d]
             [com.stuartsierra.component :as component]
             [ring.middleware.cors :refer [wrap-cors]]
-            [communitics.github :as github]))
+            [communitics.github :as github]
+            [communitics.datomic-util :as dutil]
+            [clojure.java.io :as io]))
 
 (def not-nil? (complement nil?))
 
-(defn connect-to-database [uri]
-  {:pre [(not-nil? uri)]}
-  (d/create-database uri)
-  (d/connect uri))
 
 (defrecord Database [uri connection]
   component/Lifecycle
   (start [this]
-    (let [conn (connect-to-database uri)]
-      (when conn
-        (println ";; Connected to database " uri)
-        (assoc this :connection conn))
-      ))
+    (d/create-database uri)
+    (let [conn   (d/connect uri)
+          _      (println ";; Connected to database, installing schema..." uri)
+          result (d/transact conn
+                             (-> (dutil/read-all (io/resource "schema/schema.edn"))
+                                 (first)
+                                 (get-in [:github :schema])))
+          _ (println "Schema installed successfully " result)]
+      (assoc this :connection conn)))
 
   (stop [this]
     (println ";; Disconnect from database")
@@ -31,7 +33,7 @@
     (assoc this :connection nil)))
 
 
-(defrecord GithubCrawler [serveraddress database]
+(defrecord GithubCrawler [serveraddress database max-request-count]
   component/Lifecycle
   (start [component]
     (println ";; Starting github crawler")
@@ -40,15 +42,9 @@
     (println ";; Stopping github crawler")
     component))
 
-
-(defn find-users [database]
-  (d/q '[:find ?name
-         :where [_ :user/url ?name]]
-       (d/db (:connection database))))
-
 (defn users [req]
   {:status 200
-   :body (pr-str (find-users (::database req)))
+   :body (pr-str (github/list-users (::database req)))
    :headers {"Content-Type" "application/edn"}})
 
 (defn crawl [req]
@@ -70,12 +66,12 @@
         (GET "/crawl" [] crawl)
         (GET "/*" [] (resources "index.html")))
       (wrap-app-component database github-crawler)
-      (wrap-cors :access-control-allow-origin [#"http://localhost.*"]
+      (wrap-cors :access-control-allow-origin #"http://localhost:3449"
                  :access-control-allow-methods [:get :put :post :delete])
       api))
 
 
-(defrecord WebApp [jetty database github-crawler port ]
+(defrecord WebApp [jetty database github-crawler port]
   component/Lifecycle
   (start [component]
     (do
@@ -88,19 +84,20 @@
       (.stop jetty))))
 
 
-(defn make-database [uri]
-  (map->Database {:uri uri}))
+(defn make-database [config-options]
+  (map->Database {:uri (:datomic-uri config-options)}))
 
 
 (defn make-github-crawler [config-options]
   (component/using
-    (map->GithubCrawler {:serveraddress (:github-address config-options)})
+    (map->GithubCrawler {:serveraddress (:github-address config-options)
+                         :max-request-count (:github-max-requests config-options)})
     [:database]))
 
 
 (defn prod-system [config-options]
   (component/system-map
-    :database (make-database (:datomic-uri config-options))
+    :database (make-database config-options)
     :github-crawler (make-github-crawler config-options)
     :web-app (component/using (map->WebApp {:port 10555}) [:database :github-crawler])))
 

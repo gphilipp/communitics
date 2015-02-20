@@ -18,7 +18,7 @@
                  [org.omcljs/om "0.8.8"]
                  [om-sync "0.1.1"]
                  [com.cemerick/piggieback "0.1.5"]
-                 [weasel "0.6.0-SNAPSHOT"]
+                 [weasel "0.6.0"]
                  [clj-http "1.0.1"]
                  [com.datomic/datomic-pro "0.9.5130" :exclusions [joda-time]]
                  [base64-clj "0.1.1"]]

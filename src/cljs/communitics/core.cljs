@@ -3,10 +3,15 @@
             [om.dom :as dom :include-macros true]
             [goog.events :as events]
             [cljs.reader :as reader]
-            [om-sync.util :refer [edn-xhr]])
+            [om-sync.util :refer [edn-xhr]]
+            [weasel.repl :as repl])
   (:import [goog.net XhrIo]
            goog.net.EventType
            [goog.events EventType]))
+
+(when-not (repl/alive?)
+  (repl/connect "ws://localhost:9001"))
+
 
 (enable-console-print!)
 

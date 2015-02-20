@@ -12,7 +12,8 @@
 (defn init []
   (alter-var-root #'system
                   (constantly
-                    (app/prod-system {:github-address enterprise-github
+                    (app/prod-system {:github-address official-github
+                                      :github-max-requests 5
                                       :datomic-uri "datomic:dev://localhost:4334/communitics"}))))
 
 (defn start []
