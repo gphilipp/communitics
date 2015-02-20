@@ -20,7 +20,8 @@
                  [com.cemerick/piggieback "0.1.5"]
                  [weasel "0.6.0-SNAPSHOT"]
                  [clj-http "1.0.1"]
-                 [com.datomic/datomic-pro "0.9.5130" :exclusions [joda-time]]]
+                 [com.datomic/datomic-pro "0.9.5130" :exclusions [joda-time]]
+                 [base64-clj "0.1.1"]]
 
   :jvm-opts ^:replace ["-Xmx512m" "-server"]
 

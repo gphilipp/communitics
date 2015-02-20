@@ -37,7 +37,7 @@
                      (get-sum (fn [res]
                                 (om/transact! app :sum (fn [_] res))
                                 (println "(:sum app)=" (:sum @app)))))}
-              "See countries")
+              "See countries ftw")
             (dom/textarea #js {:value (pr-str (:sum app))}))
           (dom/div nil
                    (dom/h1 nil "Countries")
