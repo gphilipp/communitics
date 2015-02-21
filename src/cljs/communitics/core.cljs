@@ -28,6 +28,22 @@
      :on-complete cb}))
 
 
+(defn user-view [user]
+  (reify
+    om/IRender
+    (render [_]
+      (dom/li nil (pr-str user)))))
+
+(defn users-view [users]
+  (reify
+    om/IRender
+    (render [_]
+      (dom/div nil
+               (dom/h1 nil "Github")
+               (dom/h3 nil (count users) " users")
+               (apply dom/ul nil
+                      (om/build-all user-view users))))))
+
 (om/root
   (fn [app owner]
     (reify
@@ -53,8 +69,9 @@
                           (fn [_]
                             (call-server
                               (fn [res]
+                                (println "Start crawling github for users")
                                 (om/transact! app :crawl-result (fn [_] res))
-                                (println "Craw github:" (:crawl-result @app)))
+                                (println "Crawled github, found " (:crawl-result @app)))
                               "/crawl"))}
                      "Crawl Github")
                    (dom/button
@@ -69,15 +86,13 @@
                               "/clear-database"))}
                      "Clear database")
                    (dom/label nil (str "Crawled and imported " (pr-str (:import-count (:crawl-result app))) " users."))
-                   #_(dom/textarea #js {:value (pr-str (:users app))}))
-          (dom/div nil
-                   (dom/h1 nil "Github")
-                   (dom/h3 nil (count (:users app)) " users")
-                   (apply dom/ul nil
-                          (map #(dom/li nil (pr-str %)) (:users app)))))
-        )))
+                   #_(dom/textarea #js {:value (pr-str (:users app))})
+                   (om/build users-view (:users app)))
+          ))))
   app-state
   {:target (. js/document (getElementById "app"))})
+
+
 
 
 (defn foo [v]
