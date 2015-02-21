@@ -47,6 +47,11 @@
    :body (pr-str (github/list-users (::database req)))
    :headers {"Content-Type" "application/edn"}})
 
+(defn clear-database [req]
+  {:status 200
+   :body (pr-str (github/delete-all-user-data (::database req)))
+   :headers {"Content-Type" "application/edn"}})
+
 (defn crawl [req]
   {:status 200
    :body (pr-str (github/import-data-into-db (::database req) (::github-crawler req)))
@@ -63,6 +68,7 @@
   (-> (routes
         (resources "/")
         (GET "/users" [] users)
+        (GET "/clear-database" [] clear-database)
         (GET "/crawl" [] crawl)
         (GET "/*" [] (resources "index.html")))
       (wrap-app-component database github-crawler)

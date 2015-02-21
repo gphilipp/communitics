@@ -13,4 +13,4 @@ pom.xml.asc
 /.idea
 *.iml
 src/clj/communitics/sg.clj
-
+figwheel_server.log

@@ -17,6 +17,13 @@
                   [?e :user/login]]
                 (d/db (:connection database)))))
 
+
+(defn login->entity [database]
+  (into {} (d/q '[:find ?login ?u
+                  :where
+                  [?u :user/login ?login]]
+                (d/db (:connection database)))))
+
 (defn map-vals
   "Given a map and a function, returns the map resulting from applying
   the function to each value."
@@ -53,18 +60,29 @@
        github-data))
 
 
-(defn create-txes [github-data]
-  (map #(assoc % :db/id (d/tempid :db.part/user))
-       (github->datomic github-data)))
+(defn create-txes [github-data database]
+  (let [login-to-users (login->entity database)]
+    (map #(assoc % :db/id
+                   (or (login-to-users (:user/login %)) (d/tempid :db.part/user)))
+         (github->datomic github-data))))
 
 
 (defn import-data-into-db [database github-crawler]
-  (let [users (fetch-github-data! github-crawler "users")
-        txes  (create-txes users)
-        _     (println "Importing github data into datomic ")
+  (let [users  (fetch-github-data! github-crawler "users")
+        txes   (create-txes users database)
+        _      (println "Importing github data into datomic ")
         result @(d/transact (:connection database) txes)]
     (println result)
     {:import-count (count txes)}))
+
+(defn delete-all-user-data [database]
+  (let [conn     (:connection database)
+        entities (d/q '[:find [?e ...]
+                        :where [?e :user/login]]
+                      (d/db conn))
+        result   (d/transact conn (map (fn [e] {:db/id (d/tempid :db.part/user) :db/excise e})
+                                  entities))]
+    (count (dec (:tx-data @result)))))
 
 
 (defn group-by-and-count [attr coll]

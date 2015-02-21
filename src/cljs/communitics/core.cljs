@@ -36,28 +36,40 @@
         (dom/div
           nil
           (dom/div nil
-            (dom/h1 nil (:title app))
-            (dom/button
-              #js {:className "pure-button pure-button-primary l-box"
-                   :onClick
-                   (fn [_]
-                     (call-server
-                       (fn [res]
-                         (om/transact! app :users (fn [_] res))
-                         (println "Found users:" (:users @app)))
-                       "/users"))}
-              "List users")
-            (dom/button
-              #js {:className "pure-button pure-button-primary l-box"
-                   :onClick
-                   (fn [_]
-                     (call-server
-                       (fn [res]
-                         (om/transact! app :import-result (fn [_] res)))
-                       "/crawl"))}
-              "Crawl github")
-            (dom/label nil (str "imported " (pr-str (:import-count (:import-result app)))))
-            #_(dom/textarea #js {:value (pr-str (:users app))}))
+                   (dom/h1 nil (:title app))
+                   (dom/button
+                     #js {:className "pure-button pure-button-primary"
+                          :onClick
+                          (fn [_]
+                            (call-server
+                              (fn [res]
+                                (om/transact! app :users (fn [_] res))
+                                (println "Found users:" (count (:users @app))))
+                              "/users"))}
+                     "List users")
+                   (dom/button
+                     #js {:className "pure-button pure-button-primary"
+                          :onClick
+                          (fn [_]
+                            (call-server
+                              (fn [res]
+                                (om/transact! app :crawl-result (fn [_] res))
+                                (println "Craw github:" (:crawl-result @app)))
+                              "/crawl"))}
+                     "Crawl Github")
+                   (dom/button
+                     #js {:className "pure-button pure-button-primary"
+                          :onClick
+                          (fn [_]
+                            (call-server
+                              (fn [res]
+                                (println "Triggered database clearing")
+                                (om/transact! app :clear-database-result (fn [_] res))
+                                (println "Clear database: " (:clear-database-result @app) " datom deleted"))
+                              "/clear-database"))}
+                     "Clear database")
+                   (dom/label nil (str "Crawled and imported " (pr-str (:import-count (:crawl-result app))) " users."))
+                   #_(dom/textarea #js {:value (pr-str (:users app))}))
           (dom/div nil
                    (dom/h1 nil "Github")
                    (dom/h3 nil (count (:users app)) " users")
