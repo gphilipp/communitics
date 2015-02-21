@@ -75,15 +75,15 @@
     (println result)
     {:import-count (count txes)}))
 
-(defn delete-all-user-data [database]
+(defn clear-database [database]
   (let [conn     (:connection database)
         entities (d/q '[:find [?e ...]
                         :where [?e :user/login]]
                       (d/db conn))
         result   (d/transact conn (map (fn [e] {:db/id (d/tempid :db.part/user) :db/excise e})
                                   entities))]
-    (count (dec (:tx-data @result)))))
-
+    (println "Cleared database")
+    (dec (count (:tx-data @result)))))
 
 (defn group-by-and-count [attr coll]
   (map-vals (group-by attr coll) count))

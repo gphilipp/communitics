@@ -23,7 +23,7 @@
                              (-> (dutil/read-all (io/resource "schema/schema.edn"))
                                  (first)
                                  (get-in [:github :schema])))
-          _ (println "Schema installed successfully " result)]
+          _      (println "Schema installed successfully " result)]
       (assoc this :connection conn)))
 
   (stop [this]
@@ -42,27 +42,26 @@
     (println ";; Stopping github crawler")
     component))
 
+
+(defn generate-response [data & [status]]
+  {:status (or status 200)
+   :headers {"Content-Type" "application/edn"}
+   :body (pr-str data)})
+
+
 (defn users [req]
-  {:status 200
-   :body (pr-str (github/list-users (::database req)))
-   :headers {"Content-Type" "application/edn"}})
+  (generate-response (github/list-users (::database req))))
 
 (defn clear-database [req]
-  {:status 200
-   :body (pr-str (github/delete-all-user-data (::database req)))
-   :headers {"Content-Type" "application/edn"}})
+  (generate-response (github/clear-database (::database req))))
 
 (defn crawl [req]
-  {:status 200
-   :body (pr-str (github/import-data-into-db (::database req) (::github-crawler req)))
-   :headers {"Content-Type" "application/edn"}})
-
+  (generate-response (github/import-data-into-db (::database req) (::github-crawler req))))
 
 (defn wrap-app-component [f database github-crawler]
   "Middleware that adds component awareness"
   (fn [req]
     (f (assoc req ::database database ::github-crawler github-crawler))))
-
 
 (defn make-handler [database github-crawler]
   (-> (routes
