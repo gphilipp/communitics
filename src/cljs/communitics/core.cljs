@@ -16,7 +16,8 @@
 (enable-console-print!)
 
 (defonce app-state (atom {:title "Communitics"
-                          :users ["no result"]}))
+                          :users ["no result"]
+                          :status ""}))
 
 (def serveraddress "http://localhost:10555")
 
@@ -29,66 +30,72 @@
 
 
 (defn user-view [user]
-  (reify
-    om/IRender
-    (render [_]
-      (dom/li nil (pr-str user)))))
+  (om/component
+    (dom/li nil
+            (dom/div nil
+                     (dom/a #js {:href (:user/repos_url user)} (:user/login user))
+                     (dom/label nil (:user/repos_url user))))))
+
+
+(defn status-view [status]
+  (om/component
+    (dom/label nil (str "Status: " status))))
+
+(defn update-status [app text]
+  (om/transact! app :status (fn [_] text)))
 
 (defn users-view [users]
-  (reify
-    om/IRender
-    (render [_]
-      (dom/div nil
-               (dom/h1 nil "Github")
-               (dom/h3 nil (count users) " users")
-               (apply dom/ul nil
-                      (om/build-all user-view users))))))
+  (om/component
+    (dom/div nil
+             (dom/h1 nil "Github")
+             (dom/h3 nil (count users) " users")
+             (apply dom/ul nil
+                    (om/build-all user-view users)))))
 
 (om/root
   (fn [app owner]
-    (reify
-      om/IRender
-      (render [_]
-        (dom/div
-          nil
-          (dom/div nil
-                   (dom/h1 nil (:title app))
-                   (dom/button
-                     #js {:className "pure-button pure-button-primary"
-                          :onClick
-                          (fn [_]
-                            (call-server
-                              (fn [res]
-                                (om/transact! app :users (fn [_] res))
-                                (println "Found users:" (count (:users @app))))
-                              "/users"))}
-                     "List users")
-                   (dom/button
-                     #js {:className "pure-button pure-button-primary"
-                          :onClick
-                          (fn [_]
-                            (call-server
-                              (fn [res]
-                                (println "Start crawling github for users")
-                                (om/transact! app :crawl-result (fn [_] res))
-                                (println "Crawled github, found " (:crawl-result @app)))
-                              "/crawl"))}
-                     "Crawl Github")
-                   (dom/button
-                     #js {:className "pure-button pure-button-primary"
-                          :onClick
-                          (fn [_]
-                            (call-server
-                              (fn [res]
-                                (println "Triggered database clearing")
-                                (om/transact! app :clear-database-result (fn [_] res))
-                                (println "Clear database: " (:clear-database-result @app) " datom deleted"))
-                              "/clear-database"))}
-                     "Clear database")
-                   (dom/label nil (str "Crawled and imported " (pr-str (:import-count (:crawl-result app))) " users."))
-                   #_(dom/textarea #js {:value (pr-str (:users app))})
-                   (om/build users-view (:users app)))
-          ))))
+    (om/component
+      (dom/div nil
+        (dom/div nil
+                 (dom/h1 nil (:title app))
+                 (dom/button
+                   #js {:className "pure-button pure-button-primary"
+                        :onClick
+                        (fn [_]
+                          (call-server
+                            (fn [res]
+                              (update-status app "Searching users" )
+                              (om/transact! app :users (fn [_] res))
+                              (update-status app (str "Found " (count (:users @app)) " users") )
+                              (println "Found users:" (count (:users @app))))
+                            "/users"))}
+                   "List users")
+                 (dom/button
+                   #js {:className "pure-button pure-button-primary"
+                        :onClick
+                        (fn [_]
+                          (call-server
+                            (fn [res]
+                              (println "Start crawling github for users")
+                              (om/transact! app :crawl-result (fn [_] res))
+                              (update-status app (str "Crawled github, found " (:crawl-result @app)))
+                              )
+                            "/crawl"))}
+                   "Crawl Github")
+                 (dom/button
+                   #js {:className "pure-button pure-button-primary"
+                        :onClick
+                        (fn [_]
+                          (call-server
+                            (fn [res]
+                              (println "Triggered database clearing")
+                              (om/transact! app :clear-database-result (fn [_] res))
+                              (println "Clear database: " (:clear-database-result @app) " datom deleted"))
+                            "/clear-database"))}
+                   "Clear database")
+                 (om/build status-view (:status app))
+                 (om/build users-view (:users app)))
+        )))
   app-state
   {:target (. js/document (getElementById "app"))})
 
