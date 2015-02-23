@@ -8,7 +8,8 @@
             [ring.middleware.cors :refer [wrap-cors]]
             [communitics.github :as github]
             [communitics.datomic-util :as dutil]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.core.async :refer [go <! >!]]))
 
 (def not-nil? (complement nil?))
 
@@ -56,7 +57,8 @@
   (generate-response (github/clear-database (::database req))))
 
 (defn crawl [req]
-  (generate-response (github/import-data-into-db (::database req) (::github-crawler req))))
+  (go (github/import-data-into-db (::database req) (::github-crawler req) "users"))
+  (generate-response "Started crawling..."))
 
 (defn wrap-app-component [f database github-crawler]
   "Middleware that adds component awareness"

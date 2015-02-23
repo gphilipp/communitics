@@ -39,7 +39,7 @@
 
 (defn status-view [status]
   (om/component
-    (dom/label nil (str "Status: " status))))
+    (dom/p #js {:className "status"} status)))
 
 (defn update-status [app text]
   (om/transact! app :status (fn [_] text)))
@@ -47,7 +47,7 @@
 (defn users-view [users]
   (om/component
     (dom/div nil
-      (dom/h1 nil "Github")
+      (dom/section nil "Github")
       (dom/h3 nil (count users) " users")
       (apply dom/ul nil
              (om/build-all user-view users)))))
@@ -55,45 +55,46 @@
 (om/root
   (fn [app owner]
     (om/component
-      (dom/div nil
-        (dom/h1 nil (:title app))
-        (dom/div #js {:paddingBottom :5px}
-          (dom/button
-            #js {:className "pure-button pure-button-primary"
-                 :onClick
-                 (fn [_]
-                   (call-server
-                     (fn [res]
-                       (update-status app "Searching users")
-                       (om/transact! app :users (fn [_] res))
-                       (update-status app (str "Found " (count (:users @app)) " users")))
-                     "/users"))}
-            "List users"))
-        (dom/div #js {:style #js {"paddingBottom" "5px"}}
-          (dom/button
-            #js {:className "pure-button pure-button-primary"
-                 :onClick
-                 (fn [_]
-                   (call-server
-                     (fn [res]
-                       (println "Start crawling github for users")
-                       (om/transact! app :crawl-result (fn [_] res))
-                       (update-status app (str "Crawled github, found " (:import-count (:crawl-result @app)))))
-                     "/crawl"))}
-            "Crawl Github"))
-        (dom/div #js {:style #js {"padding-bottom" "5px"}}
-          (dom/button
-            #js {:className "pure-button pure-button-primary"
-                 :onClick
-                 (fn [_]
-                   (call-server
-                     (fn [res]
-                       (println "Triggered database clearing")
-                       (om/transact! app :clear-database-result (fn [_] res))
-                       (println "Clear database: " (:clear-database-result @app) " datom deleted"))
-                     "/clear-database"))}
-            "Clear database"))
-        (om/build status-view (:status app))
+      (dom/div #js {:className "l-box"}
+        (dom/header nil
+                    (dom/h1 nil (:title app))
+                    (dom/p nil "Superb Analytics for your communities"))
+        (dom/button
+          #js {:className "pure-button pure-button-primary my-button"
+               :onClick
+               (fn [_]
+                 (call-server
+
+                   (fn [res]
+                     (update-status app "Searching users")
+                     (om/transact! app :users (fn [_] res))
+                     (update-status app (str "Found " (count (:users @app)) " users")))
+                   "/users"))}
+          (dom/i #js {:className "fa fa-list-ul"}) " List users")
+        (dom/button
+          #js {:className "pure-button pure-button-primary my-button"
+               :onClick
+               (fn [_]
+                 (call-server
+                   (fn [res]
+                     (println "Start crawling github for users")
+                     (om/transact! app :crawl-result (fn [_] res))
+                     (update-status app (str "Crawled github, found " (:import-count (:crawl-result @app)))))
+                   "/crawl"))}
+          (dom/i #js {:className "fa fa-camera-retro"}) " Crawl GitHub")
+        (dom/button
+          #js {:className "pure-button pure-button-primary my-button"
+               :onClick
+               (fn [_]
+                 (call-server
+                   (fn [res]
+                     (println "Triggered database clearing")
+                     (om/transact! app :clear-database-result (fn [_] res))
+                     (println "Clear database: " (:clear-database-result @app) " datom deleted"))
+                   "/clear-database"))}
+          (dom/i #js {:className "fa fa-trash-o"}) " Clear database")
+        (dom/div nil
+          (om/build status-view (:status app)))
         (om/build users-view (:users app)))))
   app-state
   {:target (. js/document (getElementById "app"))})

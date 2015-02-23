@@ -51,12 +51,14 @@
 
 (defn prefix-keys [m prefix]
   (let [keys     (keys m)
-        prefixed (map #(->> % name (str "user/") keyword) keys)]
+        prefixed (map #(->> % name (str prefix) keyword) keys)]
     (zipmap keys prefixed)))
 
 
 (defn github->datomic [github-data]
-  (map #(set/rename-keys % (-> github-data (first) (prefix-keys "users/")))
+  (map #(set/rename-keys % (-> github-data
+                               (first)
+                               (prefix-keys "user/")))
        github-data))
 
 
@@ -67,13 +69,16 @@
          (github->datomic github-data))))
 
 
-(defn import-data-into-db [database github-crawler]
-  (let [users  (fetch-github-data! github-crawler "users")
+(defn import-data-into-db
+  "Imports data from api like \"users\" "
+  [database github-crawler api]
+  (let [users  (fetch-github-data! github-crawler api)
         txes   (create-txes users database)
         _      (println "Importing github data into datomic ")
         result @(d/transact (:connection database) txes)]
     (println result)
     {:import-count (count txes)}))
+
 
 (defn clear-database [database]
   (let [conn     (:connection database)
@@ -85,6 +90,7 @@
     (println "Cleared database")
     (dec (count (:tx-data @result)))))
 
+
 (defn group-by-and-count [attr coll]
   (map-vals (group-by attr coll) count))
 
@@ -93,31 +99,6 @@
   (-> (client/get (str (:serveraddress github-crawler) "/users/" username "/repos") {:as :json})
       :body
       count))
-
-(comment
-
-  (def fetch (partial fetch-github-data! (:github-crawler user/system)))
-  (def all-users (fetch "users"
-                        {:digest-auth ["gilles.philippart" "Virgo1110"]}))
-  (def all-users (fetch))
-  (def users (take 2 all-users))
-
-  (fetch "users/gphilip")
-
-  (def fetch-user-stats #(group-by-and-count :type (fetch "users")))
-  (def fetch-repo-stats #(group-by-and-count (comp :type :owner) (fetch "repositories")))
-
-  (fetch-user-stats)
-
-
-  (def fetch-user-stats-threaded
-    #(->> "/users"
-          (str serveradress)
-          (fetch)
-          (group-by-and-count :type)))
-
-  (def fetch-repo-stats
-    #(group-by-and-count (comp :type :owner) (fetch (str serveradress "/repositories")))))
 
 
 

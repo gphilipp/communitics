@@ -1,19 +1,38 @@
 h1 {
     /*text-align: left;*/
     color: dimgray;
-    padding-left: 10px;
+}
+
+section {
+    color: dimgray;
+    font-size: x-large;
+}
+
+.padding-10 {
+    padding: 10px;
+}
+
+header p {
+    color: gray;
 }
 
 h3 {
     color: black;
-    padding-left: 15px;
 }
 
 .l-box {
     padding: 1em;
-    
 }
 
 .block {
- display: inline-block;
+    display: inline-block;
+}
+
+.status {
+    color: dimgray;
+    font-size: small;
+}
+
+.my-button {
+    margin-right: 3px;
 }
