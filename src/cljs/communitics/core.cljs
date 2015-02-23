@@ -34,7 +34,8 @@
     (dom/li nil
       (dom/div nil
         (dom/a #js {:href (:user/url user)} (:user/login user))
-        (dom/label nil (str "," (:user/repos_url user)))))))
+        (dom/label nil ",")
+        (dom/a #js {:href (:user/repos_url user)} "repos")))))
 
 
 (defn status-view [status]
@@ -66,7 +67,6 @@
                :onClick
                (fn [_]
                  (call-server
-
                    (fn [res]
                      (update-status app "Searching users")
                      (om/transact! app :users (fn [_] res))

@@ -82,11 +82,14 @@
   (let [github-tuples (fetch-github-data! github-crawler api)
         _             (println "Found" (count github-tuples) api github-tuples)
         txes          (create-txes github-tuples database db-entity-key)]
-    (if-let [nilforms (->> (nilfinder/path-seq txes) (filter (comp nil? :form)))]
-      {:message (str "Found nils in these transactions" txes ": " (println nilforms))}
-      (do (println "Importing github data into datomic ")
-          @(d/transact (:connection database) txes)
-          {:import-count (count txes)}))))
+    (let [nilforms (->> (nilfinder/path-seq txes) (filter (comp nil? :form)))]
+      (if (empty? nilforms)
+        (do (println "Importing github data into datomic ")
+            @(d/transact (:connection database) txes)
+            {:import-count (count txes)})
+        (let [message (str "Found nils in these transactions " (vec txes) ": " (vec nilforms))]
+          (do (println message)
+              {:message message}))))))
 
 
 (defn clear-database [database]
