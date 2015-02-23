@@ -58,7 +58,7 @@
       (dom/div #js {:className "l-box"}
         (dom/header nil
                     (dom/h1 nil (:title app))
-                    (dom/p nil "Superb Analytics for your communities"))
+                    (dom/p nil "Analytics for your communities!"))
         (dom/button
           #js {:className "pure-button pure-button-primary my-button"
                :onClick
@@ -77,9 +77,13 @@
                (fn [_]
                  (call-server
                    (fn [res]
+                     (update-status app "Start crawling github for users")
                      (println "Start crawling github for users")
                      (om/transact! app :crawl-result (fn [_] res))
-                     (update-status app (str "Crawled github, found " (:import-count (:crawl-result @app)))))
+                     (let [craw-result (:crawl-result @app)]
+                       (update-status app (str "Crawled GitHub"
+                                               (if-let [message (:message craw-result)]
+                                                 message (:import-count craw-result))))))
                    "/crawl"))}
           (dom/i #js {:className "fa fa-camera-retro"}) " Crawl GitHub")
         (dom/button
@@ -98,8 +102,6 @@
         (om/build users-view (:users app)))))
   app-state
   {:target (. js/document (getElementById "app"))})
-
-
 
 
 (defn foo [v]

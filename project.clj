@@ -29,7 +29,8 @@
                                    :creds :gpg}}
 
   :plugins [[lein-cljsbuild "1.0.4-SNAPSHOT"]
-            [lein-figwheel "0.2.5-SNAPSHOT"]]
+            [lein-figwheel "0.2.5-SNAPSHOT"]
+            [lein-kibit "0.0.8"]]
 
   :repl-options {:init-ns communitics.server
                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}

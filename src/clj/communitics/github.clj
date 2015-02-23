@@ -3,7 +3,8 @@
             [communitics.datomic-util :as dutil]
             [clj-http.client :as client]
             [clojure.java.io :as io]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [communitics.nilfinder :as nilfinder]))
 
 
 ;(defn http-get [url] (client/get url ({:as :json})))
@@ -18,7 +19,7 @@
                 (d/db (:connection database)))))
 
 
-(defn login->entity [database]
+(defn find-entity-keys [database]
   (into {} (d/q '[:find ?login ?u
                   :where
                   [?u :user/login ?login]]
@@ -62,22 +63,24 @@
        github-data))
 
 
-(defn create-txes [github-data database]
-  (let [login-to-users (login->entity database)]
+(defn create-txes [github-data database db-entity-key]
+  (let [key->entity (find-entity-keys database)]
     (map #(assoc % :db/id
-                   (or (login-to-users (:user/login %)) (d/tempid :db.part/user)))
+                   (or (key->entity (db-entity-key %)) (d/tempid :db.part/user)))
          (github->datomic github-data))))
 
 
-(defn import-data-into-db
-  "Imports data from api like \"users\" "
-  [database github-crawler api]
-  (let [users  (fetch-github-data! github-crawler api)
-        txes   (create-txes users database)
-        _      (println "Importing github data into datomic ")
-        result @(d/transact (:connection database) txes)]
-    (println result)
-    {:import-count (count txes)}))
+(defn import-github-tuples-into-db
+  "Imports data from apis like \"users\" \"repos\"... "
+  [database github-crawler api db-entity-key]
+  (let [github-tuples (fetch-github-data! github-crawler api)
+        _             (println "Found" (count github-tuples) api github-tuples)
+        txes          (create-txes github-tuples database db-entity-key)]
+    (if-let [nilforms (->> (nilfinder/path-seq txes) (filter (comp nil? :form)))]
+      {:message (str "Found nils in these transactions" txes ": " (println nilforms))}
+      (do (println "Importing github data into datomic ")
+          @(d/transact (:connection database) txes)
+          {:import-count (count txes)}))))
 
 
 (defn clear-database [database]
@@ -89,17 +92,3 @@
                                   entities))]
     (println "Cleared database")
     (dec (count (:tx-data @result)))))
-
-
-(defn group-by-and-count [attr coll]
-  (map-vals (group-by attr coll) count))
-
-
-(defn count-repo [github-crawler username]
-  (-> (client/get (str (:serveraddress github-crawler) "/users/" username "/repos") {:as :json})
-      :body
-      count))
-
-
-
-

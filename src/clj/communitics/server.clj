@@ -57,7 +57,7 @@
   (generate-response (github/clear-database (::database req))))
 
 (defn crawl [req]
-  (go (github/import-data-into-db (::database req) (::github-crawler req) "users"))
+  (go (github/import-github-tuples-into-db (::database req) (::github-crawler req) "users" :user/login))
   (generate-response "Started crawling..."))
 
 (defn wrap-app-component [f database github-crawler]
