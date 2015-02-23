@@ -7,7 +7,6 @@
             [communitics.nilfinder :as nilfinder]))
 
 
-;(defn http-get [url] (client/get url ({:as :json})))
 (defn http-get [url]
   (client/get url {:as :json :digest-auth ["login" "pwd"]}))
 
@@ -24,6 +23,7 @@
                   :where
                   [?u :user/login ?login]]
                 (d/db (:connection database)))))
+
 
 (defn map-vals
   "Given a map and a function, returns the map resulting from applying
@@ -57,17 +57,23 @@
 
 
 (defn github->datomic [github-data]
-  (map #(set/rename-keys % (-> github-data
-                               (first)
-                               (prefix-keys "user/")))
-       github-data))
+  (let [sample (first github-data)]
+    (map #(set/rename-keys % (prefix-keys sample "user/"))
+         github-data)))
+
+
+(defn remove-entries-with-nil-value [m]
+  (into {} (map
+             (fn [[k v]]
+               (when v [k v])) m)))
 
 
 (defn create-txes [github-data database db-entity-key]
   (let [key->entity (find-entity-keys database)]
-    (map #(assoc % :db/id
-                   (or (key->entity (db-entity-key %)) (d/tempid :db.part/user)))
-         (github->datomic github-data))))
+    (->> (github->datomic github-data)
+         (map remove-entries-with-nil-value)
+         (map #(assoc % :db/id
+                        (or (key->entity (db-entity-key %)) (d/tempid :db.part/user)))))))
 
 
 (defn import-github-tuples-into-db

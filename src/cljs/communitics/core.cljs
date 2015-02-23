@@ -41,8 +41,10 @@
   (om/component
     (dom/p #js {:className "status"} status)))
 
+
 (defn update-status [app text]
   (om/transact! app :status (fn [_] text)))
+
 
 (defn users-view [users]
   (om/component
@@ -58,7 +60,7 @@
       (dom/div #js {:className "l-box"}
         (dom/header nil
                     (dom/h1 nil (:title app))
-                    (dom/p nil "Analytics for your communities!"))
+                    (dom/p nil "Analytics for your communities."))
         (dom/button
           #js {:className "pure-button pure-button-primary my-button"
                :onClick
@@ -103,7 +105,4 @@
   app-state
   {:target (. js/document (getElementById "app"))})
 
-
-(defn foo [v]
-  (swap! app-state assoc :title v))
 
