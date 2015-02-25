@@ -4,7 +4,8 @@
             [goog.events :as events]
             [cljs.reader :as reader]
             [om-sync.util :refer [edn-xhr]]
-            [weasel.repl :as repl])
+            [weasel.repl :as repl]
+            [cljs.core.async :refer [put! chan <!]])
   (:import [goog.net XhrIo]
            goog.net.EventType
            [goog.events EventType]))

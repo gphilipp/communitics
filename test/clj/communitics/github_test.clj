@@ -1,5 +1,5 @@
 (ns communitics.github-test
-  (:require [clojure.test :refer [testing is deftest]]
+  (:require [clojure.test :refer [testing is are deftest]]
             [communitics.github :refer [github->datomic remove-entries-with-nil-value]]))
 
 (deftest github->datomic-conversion
@@ -21,5 +21,4 @@
 (deftest remove-entries
   (is (= {:c "qix", :b "bar"}
          (remove-entries-with-nil-value {:a nil :b "bar" :c "qix"}))))
-
 

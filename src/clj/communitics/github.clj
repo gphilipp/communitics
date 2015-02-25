@@ -61,7 +61,6 @@
     (map #(set/rename-keys % (prefix-keys sample "user/"))
          github-data)))
 
-
 (defn remove-entries-with-nil-value [m]
   (into {} (map
              (fn [[k v]]

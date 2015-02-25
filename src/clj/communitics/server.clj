@@ -9,7 +9,7 @@
             [communitics.github :as github]
             [communitics.datomic-util :as dutil]
             [clojure.java.io :as io]
-            [clojure.core.async :refer [go <! >!]]))
+            [clojure.core.async :refer [go <! >! put!]]))
 
 (def not-nil? (complement nil?))
 
@@ -57,7 +57,7 @@
   (generate-response (github/clear-database (::database req))))
 
 (defn crawl [req]
-  (go (github/import-github-tuples-into-db (::database req) (::github-crawler req) "users" :user/login))
+  (github/import-github-tuples-into-db (::database req) (::github-crawler req) "users" :user/login)
   (generate-response "Started crawling..."))
 
 (defn wrap-app-component [f database github-crawler]
@@ -88,7 +88,8 @@
           :jetty (run-jetty (make-handler database github-crawler) {:port port :join? false})))))
   (stop [component]
     (when-let [jetty (:jetty component)]
-      (.stop jetty))))
+      (.stop jetty)
+      (assoc component :jetty nil))))
 
 
 (defn make-database [config-options]

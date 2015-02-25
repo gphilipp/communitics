@@ -32,8 +32,7 @@
             [lein-figwheel "0.2.5-SNAPSHOT"]
             [lein-kibit "0.0.8"]]
 
-  :repl-options {:init-ns communitics.server
-                 :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 
